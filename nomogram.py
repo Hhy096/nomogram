@@ -8,10 +8,20 @@ from matplotlib.transforms import (Bbox, TransformedBbox)
 from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector)
 
 
-### Prepare dataframe from input data
 def generate_df_rank(path, total_point=100):
     
     df = pd.read_excel(path)
+    
+    df.index = df["feature"].values
+    
+    intercept = df.loc["intercept","coef"]
+    threshold = df.loc["threshold","coef"]
+    
+    df = df.drop(index=["intercept", "threshold"])
+    
+    df = df.reset_index()
+    
+    df["sequence"] = list(range(0,df.shape[0]))
     
     df["range*coef"] = df["coef"]*(df["max"]-df["min"])
     df["abs_range*coef"] = abs(df["range*coef"])
@@ -25,48 +35,79 @@ def generate_df_rank(path, total_point=100):
     df["negative_coef"] = np.minimum(df["coef"],0)
     df["positive_coef"] = np.maximum(df["coef"],0)
     
-    return df
+    df = df.sort_values(by = "sequence", ascending=True)
+    
+    return df, intercept, threshold
 
 
-def compute_x(df, lm_intercept, specific_maxi, maxi_point, mini_point=0):
+def compute_x(df, lm_intercept, specific_maxi, total_point, maxi_point, mini_point=0):
 
     mini_score = sum(df["negative_coef"]*df["max"])+sum(df["positive_coef"]*df["min"])+lm_intercept
     maxi_score = sum(df["negative_coef"]*df["min"])+sum(df["positive_coef"]*df["max"])+lm_intercept
-        
+    
+    coef = (maxi_score-mini_score)/maxi_point
+    
     score = np.linspace(mini_score, maxi_score, 500)
     prob = 1/(1+np.exp(-score))
 
-    x_point = np.linspace(0, maxi_point/specific_maxi, 500)
+    x_point = np.linspace(0, 1, 500)
+    
+    label = np.linspace(mini_point, maxi_point, 500)
+    
+    flag = (prob<=0.99) & (prob>=0.01)
 
-    return x_point, prob
+    
+    mini_overallpoint = label[flag][0]//(total_point/2)*(total_point/2)
+    maxi_overallpoint = (label[flag][-1]//(total_point/2)+1)*(total_point/2)
+    
+    score = np.linspace(coef*mini_overallpoint+mini_score, coef*maxi_overallpoint+mini_score, 500)
+    prob = 1/(1+np.exp(-score))
+      
+    return mini_overallpoint, maxi_overallpoint, x_point+0.02, prob
+    
 
-  
-### Draw axis
-def set_axis(ax, title, min_point, max_point, xticks, xticklabels,
-             ax_para = {"c":"g", "linewidth":1.5, "linestyle": "-"},
+def set_axis(ax, title, min_point, max_point, xticks, xticklabels, position, total_point, type_,
+             ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
              tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
              xtick_para = {"fontsize": 8,"fontfamily": "Times New Roman", 
-                           "fontweight": "bold", "wrap":True},
-             ylabel_para = {"fontsize": 10, "fontname": "Songti Sc", "labelpad":150,
-                            "loc": "bottom", "color": "black", "rotation":"horizontal"},
-             total_point=100):
-#              fontsize=12, labelsize=10, labelpad=120):
-    
-#     ax.axhline(0, xmin=min_point/total_point, xmax=max_point/total_point, c="black", linewidth=1.5)
-    ax.axhline(0, xmin=min_point/total_point, xmax=max_point/total_point, **ax_para)
+                           "fontweight": "bold"},
+             ylabel_para = {"fontsize": 10, "fontname": "Songti Sc", "labelpad":140,
+                            "loc": "center", "color": "black", "rotation":"horizontal"}):
+    ax.set_xlim(0, 1.1)
+
+    ax.axhline(0.6, xmin=(min_point/total_point+0.02)/1.1, 
+               xmax=(max_point/total_point+0.02)/1.1, **ax_para)
 
     ax.yaxis.set_major_locator(ticker.NullLocator())
+    ax.xaxis.set_major_locator(ticker.NullLocator())
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines['top'].set_visible(False)
     
-    ax.tick_params(**tick_para)
-    ax.set_xticks(xticks)
-    ax.set_xticklabels(xticklabels, **xtick_para)
-    ax.set_ylabel(ylabel=title, **ylabel_para)
+    for i in range(0,len(xticks)):
+        ax.axvline(xticks[i]+0.02, ymin=0.6-0.2, ymax=0.6, **ax_para)
+        
+        if position[i] == "up":
+            ax.annotate(xticklabels[i], xy=(xticks[i]+0.02, 0.75), horizontalalignment="center",
+                       **xtick_para)
+        else:
+            ax.annotate(xticklabels[i], xy=(xticks[i]+0.02, 0), horizontalalignment="center",
+                       **xtick_para)
+        if i == len(xticks)-1:
+            continue
+        if type_ != 'continuous':
+            continue
+        if abs(xticks[i+1]-xticks[i]) > 0.07:
+            for j in np.linspace(xticks[i], xticks[i+1], 6):
+                ax.axvline(j+0.02, ymin=0.6-0.1, ymax=0.6, **ax_para)
+        elif abs(xticks[i+1]-xticks[i]) > 0.025:
+            for j in np.linspace(xticks[i], xticks[i+1], 3):
+                ax.axvline(j+0.02, ymin=0.6-0.1, ymax=0.6, **ax_para)
+
+    ax.set_ylabel(title, **ylabel_para)
     
-### Assign probability to overall point
+    
 def plot_prob(ax, title, x_point, prob, threshold=None,
              ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
              threshold_para = {"c":"g", "linewidth":1, "linestyle": "-."},
@@ -80,34 +121,31 @@ def plot_prob(ax, title, x_point, prob, threshold=None,
     ax.spines['right'].set_visible(False)
     ax.spines["bottom"].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.set_xlim([0,1])
-    ax.set_ylim([-1,0])
+    ax.set_xlim([0,1.1])
+    ax.set_ylim([-0.5, 0.5])
     
-    ax.plot(x_point, -prob, **ax_para)
+    ax.plot(x_point, -prob+0.5, **ax_para)
     
     if threshold != None:
-        ax.axhline(-threshold, xmin=0, xmax=1, **threshold_para)
-        ax.text(x=1.05, y=-threshold, s="threshold={}".format(threshold), **text_para,
+        ax.axhline(-threshold+0.5, xmin=0, xmax=1, **threshold_para)
+        ax.text(x=1.05, y=-threshold+0.5, s="threshold={}".format(threshold), **text_para,
                 bbox=dict(facecolor='black', alpha=0.2))
 
     ax.tick_params(**tick_para)
     
     ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8, 1])
     ax.set_xticklabels(['','','','','',''])
-    ax.set_yticks([0,-0.2,-0.4,-0.6,-0.8,-1])
+    ax.set_yticks([0.5, 0.3, 0.1, -0.1, -0.3, -0.5])  
     ax.set_yticklabels([0,0.2,0.4,0.6,0.8,1], **xtick_para)
     
-#     ax.set_ylabel(ylabel=title, fontsize=labelsize, fontname="Songti Sc", labelpad=67, 
-#                   loc="center", color="black", rotation="horizontal")
     ax.set_ylabel(ylabel=title, **ylabel_para)
     
-
-### Draw grid between different axes
+    
 def grid_connect(ax1, ax2, xticks, 
                  prop_lines={"lw": 0.5, "color": "b", "linestyle": "-."}, **kwargs):
     
     for xtick in xticks:
-        bbox = Bbox.from_extents(xtick, 0, xtick, 1)
+        bbox = Bbox.from_extents(xtick+0.02, 0.02, xtick+0.02, 1.02)
         
         bbox1 = TransformedBbox(bbox, ax1.get_xaxis_transform())
         bbox2 = TransformedBbox(bbox, ax2.get_xaxis_transform())
@@ -119,52 +157,70 @@ def grid_connect(ax1, ax2, xticks,
         
     return c
 
-### Generate xtick and corresponding labels
+
 def generate_xtick(range_, type_, mini, maxi, point, total_point):
     ran = point/total_point
-#     print(ran)
-#     print(type_)
     
-    if type_=="nominal":
+    if type_ in ["nominal", "ordinal"]:
         range_ = int(range_)
-        xticks = list(np.linspace(0, point/total_point, range_+1))
-        xticklabels = list(range(int(mini), int(maxi)+1, 1))
+        if (ran<=0.1) and (range_>=3):
+            xticks = list(np.linspace(0, point/total_point, 3))
+            xticklabels = list(np.linspace(mini, maxi, 3))
+            xticklabels = [int(i) for i in xticklabels]
+        else:
+            xticks = list(np.linspace(0, point/total_point, range_+1))
+            xticklabels = list(range(int(mini), int(maxi)+1, 1))
     elif (0.1<=ran<0.25) or (range_<2):
         xticks = list(np.linspace(0, point/total_point, 5))
         xticklabels = list(np.linspace(mini, maxi, 5))
     elif (ran<0.1):
-        xticks = list(np.linspace(0, point/total_point, 3))
-        xticklabels = list(np.linspace(mini, maxi, 3))
+        xticks = list(np.linspace(0, point/total_point, 2))
+        xticklabels = list(np.linspace(mini, maxi, 2))
     elif (range_<= 11):
         range_ = int(range_)
         xticks = list(np.linspace(0, point/total_point, range_+1))
         xticklabels = list(range(int(mini), int(maxi)+1, 1))
     elif range_ <= 150:
-        xticks = list(np.linspace(0, point/total_point, 6))
-        xticklabels = list(np.linspace(int(mini), int(maxi), 6))
+        if (range_%10 == 0) and (ran/(range_/5+1) < 0.07):
+            num = int(range_/10)
+            xticks = list(np.linspace(0, point/total_point, num+1))
+            xticklabels = list(np.linspace(int(mini), int(maxi), num+1))
+        elif range_%5 == 0:
+            num = int(range_/5)
+            xticks = list(np.linspace(0, point/total_point, num+1))
+            xticklabels = list(np.linspace(int(mini), int(maxi), num+1))
+        else:
+            xticks = list(np.linspace(0, point/total_point, 6))
+            xticklabels = list(np.linspace(int(mini), int(maxi), 6))
     elif range_ <= 200:
-        num = int((maxi-mini)//10+1)
-        xticks = list(np.linspace(0, point/total_point, num))
-        xticklabels = list(np.linspace(mini, maxi, num))
+        if range_%10 == 0:
+            num = range_/10
+            xticks = list(np.linspace(0, point/total_point, num))
+            xticklabels = list(np.linspace(int(mini), int(maxi), num))
+        else:
+            num = int((maxi-mini)//10+1)
+            xticks = list(np.linspace(0, point/total_point, num))
+            xticklabels = list(np.linspace(mini, maxi, num))
     else:
         num = int((maxi-mini)//50+1)
         xticks = list(np.linspace(0, point/total_point, num))
         xticklabels = [int(i) for i in list(np.linspace(mini, maxi, num))]
+    
+    position = ['down' for i in xticks]
         
-    return xticks, xticklabels
+    return xticks, xticklabels, position
 
-  
-### Draw nomogram
-def nomogram(path, result_title, lm_intercept, 
-             threshold=None, fig_width=10, single_height=0.35, specific_maxi="default", dpi=150,
-             ax_para = {"c":"black", "linewidth":1.5, "linestyle": "-"},
+
+
+def nomogram(path, result_title, fig_width=10, single_height=0.45, specific_maxi="default", dpi=300,
+             ax_para = {"c":"black", "linewidth":1.3, "linestyle": "-"},
              tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
-             xtick_para = {"fontsize": 8,"fontfamily": "Times New Roman", "fontweight": "bold"},
-             ylabel_para = {"fontsize": 10, "fontname": "Songti Sc", "labelpad":100,
-                            "loc": "bottom", "color": "black", "rotation":"horizontal"},
+             xtick_para = {"fontsize": 10,"fontfamily": "Songti Sc", "fontweight": "bold"},
+             ylabel_para = {"fontsize": 12, "fontname": "Songti Sc", "labelpad":100,
+                            "loc": "center", "color": "black", "rotation":"horizontal"},
              total_point=100):
     
-    df = generate_df_rank(path=path, total_point=total_point)
+    df, lm_intercept, threshold = generate_df_rank(path=path, total_point=total_point)
     new = df["feature"].str.split(pat="_", expand=True)
     
     if new.shape[1] == 1:
@@ -173,30 +229,38 @@ def nomogram(path, result_title, lm_intercept,
         df["main_feature"] = new[0]
         df["sub_feature"] = new[1]
         
-    group = df.groupby(["main_feature"])
+    group = df.groupby(["main_feature"], sort=False)
     num = len(group)
     
     maxi_point = sum(df["point"])
     if (specific_maxi=="default") or (specific_maxi<maxi_point):
-        specific_maxi = 50*(maxi_point//50+1)
+        specific_maxi = (total_point/2)*(maxi_point//(total_point/2)+1)
         
-    x_point, prob = compute_x(df=df, lm_intercept=lm_intercept, 
+    mini_overallpoint, maxi_overallpoint, x_point, prob = compute_x(df=df, lm_intercept=lm_intercept, 
+                                                                    total_point=total_point,
                               maxi_point=maxi_point, specific_maxi=specific_maxi)
 
     fig = plt.figure(figsize=(fig_width, single_height*(num+2+7)), dpi=dpi)  # 创建画布
     gs = gridspec.GridSpec(num+5, 1)
     
     xticklabels = []
-    for i in np.linspace(0,total_point,51):
-        if int(i) == i:
-            xticklabels.append(int(i))
+    labels = np.linspace(0, total_point, 11)
+    for i in range(0,11):
+        if i%1 == 0:
+            xticklabels.append(int(labels[i]))
         else:
             xticklabels.append("")
-    ax0 = fig.add_subplot(gs[0,:])
-    set_axis(ax0, title="Point", min_point=0, max_point=total_point, total_point=total_point,
-            xticks=np.linspace(0,1,51), xticklabels=xticklabels, ax_para=ax_para)
+            
+    position = ["done" for i in xticklabels]
 
-    feature = list(set(df["main_feature"]))
+    ax0 = fig.add_subplot(gs[0,:])
+    set_axis(ax0, title="Point", min_point=0, max_point=total_point, position=position, 
+             total_point=total_point, xticks=np.linspace(0,1,11), xticklabels=xticklabels, 
+             type_='continuous', ax_para=ax_para, xtick_para=xtick_para, ylabel_para=ylabel_para)
+    
+    main_feature = list(df["main_feature"])
+    feature = list(set(main_feature))
+    feature.sort(key=main_feature.index)
     
     for i in range(0, len(feature)):
         ax = fig.add_subplot(gs[i+1,:])
@@ -210,17 +274,16 @@ def nomogram(path, result_title, lm_intercept,
 
             xticks = [point/total_point for point in d["point"].values]
             xticklabels = [str(i).replace("\\n", "\n") for i in d["sub_feature"]]
+            position = [i for i in d["position"].values]
 
         elif d.shape[0] == 1:
 
-#             maxi = int(d["max"])
-#             mini = int(d["min"])
             maxi = float(d["max"])
             mini = float(d["min"])
             point = d["point"].values[0]
             range_ = maxi-mini
             
-            xticks, xticklabels=generate_xtick(range_, type_=list(set(d["type"].values))[0],
+            xticks, xticklabels, position=generate_xtick(range_, type_=list(set(d["type"].values))[0],
                                                mini=mini, maxi=maxi,
                                                point=point, total_point=total_point)
             
@@ -237,29 +300,43 @@ def nomogram(path, result_title, lm_intercept,
             
         if list(set(d["type"].values))[0] == "nominal":
             ax_para["linestyle"] = "-."
-        elif list(set(d["type"].values))[0] == "continuous":
-            ax_para["linestyle"] = "-"
         elif list(set(d["type"].values))[0] == "ordinal":
             ax_para["linestyle"] = "-"
+        elif list(set(d["type"].values))[0] == "continuous":
+             ax_para["linestyle"] = "-"
+        elif list(set(d["type"].values))[0] == "discrete":
+             ax_para["linestyle"] = "-"
 
         set_axis(ax, title=title, min_point=min_point, max_point=max_point, 
-             xticks=xticks, xticklabels=xticklabels, total_point=total_point, ax_para=ax_para)
+             xticks=xticks, xticklabels=xticklabels, position=position,
+             total_point=total_point, ax_para=ax_para, type_= list(set(d["type"].values))[0],
+             xtick_para=xtick_para, ylabel_para=ylabel_para)
 
         tick_num = int(np.ceil(max(xticks)/0.1))
         grid_connect(ax0, ax, xticks=np.linspace(0,0.1*tick_num,tick_num+1))
         
     ax_overallpoint = fig.add_subplot(gs[num+1, :])
-    xticks, xticklabels = generate_xtick(range_=specific_maxi, type_="continuous",
-                                         mini=0, maxi=specific_maxi,
-                                         point=total_point, total_point=total_point)
+    
+    xticklabels = []
+    
+    xticks, xticklabels, position=generate_xtick(maxi_overallpoint-mini_overallpoint,
+                                       type_="continuous",
+                                       mini=mini_overallpoint, 
+                                       maxi=maxi_overallpoint,
+                                       point=maxi_overallpoint, 
+                                       total_point=maxi_overallpoint)
+
     ax_para["linestyle"] = "-"
-    xticklabels = [int(i) for i in xticklabels]
-    set_axis(ax_overallpoint, title="Overall Point", min_point=0, max_point=specific_maxi,
-            xticks=xticks, xticklabels=xticklabels, total_point=total_point, ax_para=ax_para)
+
+    set_axis(ax_overallpoint, title="Overall Point", min_point=0, 
+            max_point=maxi_overallpoint, position=position, type_="continuous",
+            xticks=xticks, xticklabels=xticklabels, 
+            total_point=maxi_overallpoint, ax_para=ax_para, xtick_para=xtick_para, ylabel_para=ylabel_para)
 
     ax_prob = fig.add_subplot(gs[num+2:, :])
+    ylabel_para["loc"] = "center"
     plot_prob(ax_prob, title=result_title, x_point=x_point, prob=prob, 
-              threshold=threshold, total_point=total_point)
+              threshold=threshold, total_point=total_point,ylabel_para=ylabel_para)
     ax_prob.grid(color='b', ls = '-.', lw = 0.25, axis="both")
 
     fig.tight_layout()
