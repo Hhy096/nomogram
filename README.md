@@ -9,8 +9,12 @@ $$\text{Probability (refractory/recurrent CMV infection)} = \dfrac{1}{1+exp(−Y
 where Y = 0.0322 × (age) – 0.0696 × (gender) + 0.5492 × (underlying disease) + 0.0963 × (the cumulative dose of prednisone during pre- engraftment phase) – 0.0771 × (CD34+ cell counts in graft) – 1.2926. The threshold of probability was 0.5243, which separates patients into high- and low-risk groups.
 
 #### Step 1. Construct excel file
-According to the equation of logistic regression, fill the 
+According to the equation of logistic regression, fill the template file as follows:
+<img width="652" alt="image" src="https://user-images.githubusercontent.com/105685749/210125549-5281415f-79d5-43ad-b956-ef4d1227a041.png">
 
+Rename the template file to be 'model.xlsx'.
+
+#### Step 2. Run the following python code 
 ```python
 '''
 Download nomogram.py to certain path
@@ -22,3 +26,7 @@ from nomogram import nomogram
 path = "./example/model.xlsx"
 nomogram(path=path, result_title="High Risk")
 ```
+
+#### Step 3. Get the nomogram
+Then we can get the nomogram for the logistic regression.
+![image](https://user-images.githubusercontent.com/105685749/210125610-5f55d5c4-c270-41e3-8f3c-8d9174cfda58.png)
