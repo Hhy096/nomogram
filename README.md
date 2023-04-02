@@ -53,7 +53,9 @@ where Y = 0.0322 × (age) – 0.0696 × (gender) + 0.5492 × (underlying disease
 According to the equation of logistic regression, fill the template file as follows:
 <img width="652" alt="image" src="https://user-images.githubusercontent.com/105685749/210125549-5281415f-79d5-43ad-b956-ef4d1227a041.png">
 
-<font color=red> **There can be several tricks when constructing excels for input, please check excel_construction.md for detials.** </font>
+```diff
++ There can be several tricks when constructing excels for input, please check excel_construction.md for detials.
+```
 
 Rename the template file to be 'model.xlsx'.
 
