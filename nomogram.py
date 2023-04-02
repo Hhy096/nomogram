@@ -40,7 +40,7 @@ def generate_df_rank(path, total_point=100):
     return df, intercept, threshold
 
 
-def compute_x(df, lm_intercept, specific_maxi, total_point, maxi_point, mini_point=0):
+def compute_x(df, lm_intercept, total_point, maxi_point, mini_point=0):
 
     mini_score = sum(df["negative_coef"]*df["max"])+sum(df["positive_coef"]*df["min"])+lm_intercept
     maxi_score = sum(df["negative_coef"]*df["min"])+sum(df["positive_coef"]*df["max"])+lm_intercept
@@ -68,7 +68,7 @@ def compute_x(df, lm_intercept, specific_maxi, total_point, maxi_point, mini_poi
 
 def set_axis(ax, title, min_point, max_point, xticks, xticklabels, position, total_point, type_,
              ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
-             tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
+            #  tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
              xtick_para = {"fontsize": 8,"fontfamily": "Times New Roman", 
                            "fontweight": "bold"},
              ylabel_para = {"fontsize": 10, "fontname": "Songti Sc", "labelpad":140,
@@ -112,7 +112,7 @@ def plot_prob(ax, title, x_point, prob, threshold=None,
              ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
              threshold_para = {"c":"g", "linewidth":1, "linestyle": "-."},
              tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
-             text_para = {"fontsize": 10,"fontfamily": "Times New Roman", "fontweight": "bold"},
+             text_para = {"fontsize": 10,"fontfamily": "Songti Sc", "fontweight": "bold"},
              xtick_para = {"fontsize": 8,"fontfamily": "Times New Roman", "fontweight": "bold"},
              ylabel_para = {"fontsize": 10, "fontname": "Songti Sc", "labelpad":100,
                             "loc": "bottom", "color": "black", "rotation":"horizontal"},
@@ -212,7 +212,7 @@ def generate_xtick(range_, type_, mini, maxi, point, total_point):
 
 
 
-def nomogram(path, result_title, fig_width=10, single_height=0.45, specific_maxi="default", dpi=300,
+def nomogram(path, result_title="Positive Risk", fig_width=10, single_height=0.45, dpi=100,
              ax_para = {"c":"black", "linewidth":1.3, "linestyle": "-"},
              tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
              xtick_para = {"fontsize": 10,"fontfamily": "Songti Sc", "fontweight": "bold"},
@@ -233,12 +233,12 @@ def nomogram(path, result_title, fig_width=10, single_height=0.45, specific_maxi
     num = len(group)
     
     maxi_point = sum(df["point"])
-    if (specific_maxi=="default") or (specific_maxi<maxi_point):
-        specific_maxi = (total_point/2)*(maxi_point//(total_point/2)+1)
+    # if (specific_maxi=="default") or (specific_maxi<maxi_point):
+    #     specific_maxi = (total_point/2)*(maxi_point//(total_point/2)+1)
         
     mini_overallpoint, maxi_overallpoint, x_point, prob = compute_x(df=df, lm_intercept=lm_intercept, 
                                                                     total_point=total_point,
-                              maxi_point=maxi_point, specific_maxi=specific_maxi)
+                              maxi_point=maxi_point)
 
     fig = plt.figure(figsize=(fig_width, single_height*(num+2+7)), dpi=dpi)  # 创建画布
     gs = gridspec.GridSpec(num+5, 1)
@@ -328,14 +328,14 @@ def nomogram(path, result_title, fig_width=10, single_height=0.45, specific_maxi
 
     ax_para["linestyle"] = "-"
 
-    set_axis(ax_overallpoint, title="Overall Point", min_point=0, 
+    set_axis(ax_overallpoint, title="Overall point", min_point=0, 
             max_point=maxi_overallpoint, position=position, type_="continuous",
             xticks=xticks, xticklabels=xticklabels, 
             total_point=maxi_overallpoint, ax_para=ax_para, xtick_para=xtick_para, ylabel_para=ylabel_para)
 
     ax_prob = fig.add_subplot(gs[num+2:, :])
     ylabel_para["loc"] = "center"
-    plot_prob(ax_prob, title=result_title, x_point=x_point, prob=prob, 
+    plot_prob(ax_prob, title=result_title, x_point=x_point, prob=prob, tick_para=tick_para,
               threshold=threshold, total_point=total_point,ylabel_para=ylabel_para)
     ax_prob.grid(color='b', ls = '-.', lw = 0.25, axis="both")
 
