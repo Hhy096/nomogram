@@ -7,7 +7,7 @@ from matplotlib import gridspec
 from matplotlib.transforms import (Bbox, TransformedBbox)
 from mpl_toolkits.axes_grid1.inset_locator import (BboxConnector)
 
-
+### return df, intercept, threshold from the excel
 def generate_df_rank(path, total_point=100):
     
     df = pd.read_excel(path)
@@ -41,7 +41,8 @@ def generate_df_rank(path, total_point=100):
 
 
 def compute_x(df, lm_intercept, total_point, maxi_point, mini_point=0):
-
+    
+    ### Compute the minimum possible score and maximum possible score
     mini_score = sum(df["negative_coef"]*df["max"])+sum(df["positive_coef"]*df["min"])+lm_intercept
     maxi_score = sum(df["negative_coef"]*df["min"])+sum(df["positive_coef"]*df["max"])+lm_intercept
     
@@ -65,7 +66,8 @@ def compute_x(df, lm_intercept, total_point, maxi_point, mini_point=0):
       
     return mini_overallpoint, maxi_overallpoint, x_point+0.02, prob
     
-
+    
+### set axis for each variable
 def set_axis(ax, title, min_point, max_point, xticks, xticklabels, position, total_point, type_,
              ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
             #  tick_para = {"direction": 'in',"length": 3, "width": 1.5,},
@@ -107,7 +109,7 @@ def set_axis(ax, title, min_point, max_point, xticks, xticklabels, position, tot
 
     ax.set_ylabel(title, **ylabel_para)
     
-    
+### draw the softmax mapping curve
 def plot_prob(ax, title, x_point, prob, threshold=None,
              ax_para = {"c":"black", "linewidth":1, "linestyle": "-"},
              threshold_para = {"c":"g", "linewidth":1, "linestyle": "-."},
@@ -140,7 +142,7 @@ def plot_prob(ax, title, x_point, prob, threshold=None,
     
     ax.set_ylabel(ylabel=title, **ylabel_para)
     
-    
+### draw the grid between axies
 def grid_connect(ax1, ax2, xticks, 
                  prop_lines={"lw": 0.5, "color": "b", "linestyle": "-."}, **kwargs):
     
@@ -157,7 +159,7 @@ def grid_connect(ax1, ax2, xticks,
         
     return c
 
-
+### compute xtick elements
 def generate_xtick(range_, type_, mini, maxi, point, total_point):
     ran = point/total_point
     
