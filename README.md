@@ -1,6 +1,6 @@
 ## simpleNomo
 
-simpleNomo is a python package for generating nomograms of logistic regression models with only model coefficients and variables ranges.  
+simpleNomo is a python package for generating nomograms of logistic regression models with only model coefficients and variables ranges. The source code is in **nomogram.py**.
 
 #### Backgroud
 Nomogram, a graphical calculator, has adequately solved the problem of inconvenient calculation. Nomogram is a chart consisting of several arranged lines for visualization of logistic regression model. With the development of the electronic calculators and computers, nomograms become less popular these days. However, they are still very prevalent in the condition without the computation sources. There are several tools for generating nomograms. They are available in SAS, Stata, as well as **rms** and **hdnom** packages in R language.
