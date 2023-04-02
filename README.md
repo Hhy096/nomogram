@@ -45,7 +45,7 @@ nomogram(path, result_title="Positive Risk", fig_width=10, single_height=0.45, d
 
 The procedure for generating nomogram of a specific logisitic regression is shown below.
 
-An example can be illustrated as follows. A logistic regression model to predict refractory/recurrent cytomegalovirus (CMV) infection after haploidentical donor (HID) hematopoietic stem cell transplantation (HSCT) was presented in . The model is presented as
+An example can be illustrated as follows. A logistic regression model to predict refractory/recurrent cytomegalovirus (CMV) infection after haploidentical donor (HID) hematopoietic stem cell transplantation (HSCT) was presented in work [1]. The model is presented as
 $$\text{Probability (refractory/recurrent CMV infection)} = \dfrac{1}{1+exp(−Y)}$$
 where Y = 0.0322 × (age) – 0.0696 × (gender) + 0.5492 × (underlying disease) + 0.0963 × (the cumulative dose of prednisone during pre- engraftment phase) – 0.0771 × (CD34+ cell counts in graft) – 1.2926. The threshold of probability was 0.5243, which separates patients into high- and low-risk groups.
 
@@ -72,3 +72,6 @@ Then we can get the nomogram for the logistic regression.
 ![image](https://user-images.githubusercontent.com/105685749/229339773-a6c1b4d1-03fd-4b0c-8165-d76607c7714d.png)
 
 <!--![image](https://user-images.githubusercontent.com/105685749/210125610-5f55d5c4-c270-41e3-8f3c-8d9174cfda58.png)-->
+
+### Reference
+[1] Shen, M. Z., Hong, S. D., Wang, J., Zhang, X. H., Xu, L. P., Wang, Y., ... & Mo, X. D. (2022). A predicted model for refractory/recurrent cytomegalovirus infection in acute leukemia patients after haploidentical hematopoietic stem cell transplantation. Frontiers in Cellular and Infection Microbiology, 12, 862526.
