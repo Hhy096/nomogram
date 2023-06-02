@@ -4,6 +4,20 @@ simpleNomo is a python package for generating nomograms of logistic regression m
 
 ### The link for online generator is <http://183.162.233.24:10081/Nomogram/v3>.
 
+If you use the generator or the package in your work, please cite our paper.
+```txt
+@article{Hong_2023,
+	doi = {10.34133/hds.0023},
+	url = {https://doi.org/10.34133%2Fhds.0023},
+	year = 2023,
+	month = {may},
+	publisher = {American Association for the Advancement of Science ({AAAS})},
+	author = {Haoyang Hong and Shenda Hong},
+	title = {{simpleNomo}: A Python Package of Making Nomograms for Visualizable Calculation of Logistic Regression Models},
+	journal = {Health Data Science}
+}
+```
+
 #### Backgroud
 Nomogram, a graphical calculator, has adequately solved the problem of inconvenient calculation. Nomogram is a chart consisting of several arranged lines for visualization of logistic regression model. With the development of the electronic calculators and computers, nomograms become less popular these days. However, they are still very prevalent in the condition without the computation sources. There are several tools for generating nomograms. They are available in SAS, Stata, as well as **rms** and **hdnom** packages in R language.
 
