@@ -2,7 +2,7 @@
 
 simpleNomo is a python package for generating nomograms of logistic regression models with only model coefficients and variables ranges. The source code is in **nomogram.py**.
 
-### The link for online generator is <http://183.162.233.24:10081/Nomogram/v3>.
+### The link for online generator is <https://visdata.bjmu.edu.cn/nomogram>.
 
 If you use the generator or the package in your work, please cite our paper.
 ```txt
