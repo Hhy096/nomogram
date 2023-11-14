@@ -92,4 +92,4 @@ Then we can get the nomogram for the logistic regression.
 <!--![image](https://user-images.githubusercontent.com/105685749/210125610-5f55d5c4-c270-41e3-8f3c-8d9174cfda58.png)-->
 
 ### Reference
-[1] Shen, M. Z., Hong, S. D., Wang, J., Zhang, X. H., Xu, L. P., Wang, Y., ... & Mo, X. D. (2022). A predicted model for refractory/recurrent cytomegalovirus infection in acute leukemia patients after haploidentical hematopoietic stem cell transplantation. Frontiers in Cellular and Infection Microbiology, 12, 862526.
+[1] Shen, M. Z., Hong, S. D., Wang, J., Zhang, X. H., Xu, L. P., Wang, Y., ... & Mo, X. D. (2022). A predicted model for refractory/recurrent cytomegalovirus infection in acute leukemia patients after haploidentical hematopoietic stem cell transplantation. Frontiers in cellular and infection microbiology, 12, 862526.
